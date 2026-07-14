@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REWARD CODES</title>
+<style>
+  :root{
+    --popup-bg: #dbc585;
+    --btn-bg: #5dc503;
+    --btn-bg-strong: #6ede0d;
+    --accent-border: rgba(219,197,133,0.6);
+    --glass-shadow: rgba(0,0,0,0.45);
+    --text-light: #f7fcfb;
+    --text-dim: rgba(247,252,251,0.75);
+    --popup-text: #2e2410;
+    --popup-text-dim: rgba(46,36,16,0.75);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0; padding:0;
+    height: 100vh;
+    height: 100dvh;
+    width: 100%;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Inter', Roboto, sans-serif;
+    overflow: hidden;
+    background: #0a0a0a;
+  }
+
+  #stage{
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #bg-image{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    z-index: 0;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  #bg-blur-overlay{
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(0px) brightness(1);
+    -webkit-backdrop-filter: blur(0px) brightness(1);
+    background: rgba(0,0,0,0);
+    transition: backdrop-filter 0.7s ease, background 0.7s ease;
+    z-index: 5;
+    pointer-events: none;
+  }
+  #bg-blur-overlay.active{
+    backdrop-filter: blur(14px) brightness(0.65);
+    -webkit-backdrop-filter: blur(14px) brightness(0.65);
+    background: rgba(0,0,0,0.25);
+    pointer-events: auto;
+  }
+
+  /* Badge kecil penanda ini adalah prototype/demo, bukan proses sungguhan */
+  #demo-badge{
+    position: absolute;
+    top: 16px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid var(--accent-border);
+    color: var(--btn-bg-strong);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 999px;
+    backdrop-filter: blur(6px);
+  }
+
+  /* ===== Popup ===== */
+  #popup{
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -46%) scale(0.92);
+    z-index: 10;
+    width: min(92vw, 380px);
+    max-height: 90dvh;
+    overflow-y: auto;
+    padding: clamp(24px, 6vw, 36px) clamp(20px, 6vw, 32px) clamp(20px, 5vw, 30px);
+    border-radius: 20px;
+    background: var(--popup-bg);
+    border: 1px solid var(--accent-border);
+    box-shadow: 0 20px 60px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.25);
+    backdrop-filter: blur(22px) saturate(160%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(.2,.9,.3,1.2);
+    text-align: center;
+    user-select: none;
+  }
+  #popup.show{
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+  }
+
+  .popup-icon{
+    width: clamp(44px, 12vw, 52px);
+    height: clamp(44px, 12vw, 52px);
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid var(--accent-border);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .popup-icon svg{ width: 55%; height:55%; stroke: var(--popup-text); }
+
+  #popup h2{
+    margin: 0 0 6px;
+    color: var(--popup-text);
+    font-size: clamp(17px, 4.5vw, 20px);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  #popup p.subtitle{
+    margin: 0 0 24px;
+    color: var(--popup-text-dim);
+    font-size: clamp(12px, 3.2vw, 13px);
+    line-height: 1.5;
+  }
+
+  .field-label{
+    display:block;
+    text-align:left;
+    font-size: 12px;
+    color: var(--popup-text-dim);
+    margin-bottom: 8px;
+    letter-spacing: 0.03em;
+  }
+
+  #username-input{
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.25);
+    background: rgba(0,0,0,0.18);
+    color: var(--text-light);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+  #username-input::placeholder{ color: rgba(247,252,251,0.55); }
+  #username-input:focus{
+    border-color: var(--btn-bg);
+    background: rgba(0,0,0,0.28);
+  }
+
+  #verify-btn{
+    margin-top: 18px;
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.15);
+    background: var(--btn-bg);
+    color: var(--text-light);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    transition: transform 0.15s ease, background 0.25s ease, opacity 0.25s ease;
+  }
+  #verify-btn:hover:not(:disabled){ transform: translateY(-1px); background: var(--btn-bg-strong); }
+  #verify-btn:active:not(:disabled){ transform: translateY(0px) scale(0.98); }
+  #verify-btn:disabled{ cursor: default; opacity: 0.85; }
+
+  #verify-btn.pressed, #continue-btn.pressed{
+    animation: btn-press 0.38s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes btn-press{
+    0%   { transform: translateY(0) scale(1); }
+    30%  { transform: translateY(2px) scale(0.94); }
+    60%  { transform: translateY(-3px) scale(1.03); }
+    100% { transform: translateY(0) scale(1); }
+  }
+
+  #verify-btn.success{
+    background: var(--btn-bg-strong);
+    color: var(--text-light);
+  }
+
+  .spinner{
+    width: 16px; height:16px;
+    border-radius: 50%;
+    border: 2px solid rgba(247,252,251,0.35);
+    border-top-color: var(--text-light);
+    animation: spin 0.7s linear infinite;
+    display:none;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  .checkmark{
+    width: 18px; height:18px;
+    display:none;
+  }
+  .checkmark svg{ width:100%; height:100%; }
+  .checkmark circle{
+    stroke: #f7fcfb;
+    stroke-width: 2;
+    fill: none;
+    stroke-dasharray: 63;
+    stroke-dashoffset: 63;
+  }
+  .checkmark path{
+    stroke: #f7fcfb;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
+  }
+  #verify-btn.success .checkmark circle{
+    animation: draw-circle 0.4s ease forwards;
+  }
+  #verify-btn.success .checkmark path{
+    animation: draw-check 0.3s ease 0.4s forwards;
+  }
+  @keyframes draw-circle{ to{ stroke-dashoffset: 0; } }
+  @keyframes draw-check{ to{ stroke-dashoffset: 0; } }
+
+  .status-text{
+    margin-top: 14px;
+    font-size: 12.5px;
+    color: var(--popup-text-dim);
+    min-height: 16px;
+    transition: color 0.3s ease;
+  }
+  .status-text.success{ color: #3f7d00; }
+  .status-text.error{ color: #b3261e; }
+
+  #promo-input.error{
+    border-color: #ff6b6b;
+    background: rgba(255,107,107,0.10);
+  }
+
+  /* ===== Step transitions ===== */
+  .step{
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .step.hidden{
+    display: none;
+  }
+  .step.fade-out{
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  .step.fade-in{
+    animation: step-fade-in 0.4s ease;
+  }
+  @keyframes step-fade-in{
+    from{ opacity: 0; transform: translateY(6px); }
+    to{ opacity: 1; transform: translateY(0); }
+  }
+
+  #promo-input{
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.25);
+    background: rgba(0,0,0,0.18);
+    color: var(--text-light);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+  #promo-input::placeholder{ color: rgba(247,252,251,0.55); }
+  #promo-input:focus{
+    border-color: var(--btn-bg);
+    background: rgba(0,0,0,0.28);
+  }
+
+  #continue-btn{
+    margin-top: 18px;
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.15);
+    background: var(--btn-bg);
+    color: var(--text-light);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    transition: transform 0.15s ease, background 0.25s ease;
+  }
+  #continue-btn:hover{ transform: translateY(-1px); background: var(--btn-bg-strong); }
+  #continue-btn:active{ transform: translateY(0px) scale(0.98); }
+
+  .disclaimer{
+    margin-top: 16px;
+    font-size: 10.5px;
+    color: rgba(46,36,16,0.55);
+    line-height: 1.4;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div id="stage">
+    <img id="bg-image" src="https://i.ibb.co.com/35J5tQZs/Screenshot-2026-07-13-221558.png" alt="Background">
+    <div id="bg-blur-overlay"></div>
+
+    <div id="popup" role="dialog" aria-modal="true" aria-labelledby="popup-title">
+
+      <!-- STEP 1: Verify -->
+      <div id="step-1" class="step">
+        <div class="popup-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"></path>
+            <path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"></path>
+          </svg>
+        </div>
+        <h2 id="popup-title">Enter Username to get all new rewards!</h2>
+
+        <label class="field-label" for="username-input">Username</label>
+        <input id="username-input" type="text" placeholder="e.g. johndoe123" autocomplete="off">
+
+        <button id="verify-btn">
+          <span class="spinner" id="spinner"></span>
+          <span class="checkmark" id="checkmark">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M8 12.5l2.5 2.5L16 9"></path>
+            </svg>
+          </span>
+          <span id="btn-text">Verify</span>
+        </button>
+
+        <div class="status-text" id="status-text"></div>
+        <div class="disclaimer">Privacy Policy</div>
+      </div>
+
+      <!-- STEP 2: Promo Code -->
+      <div id="step-2" class="step hidden">
+        <div class="popup-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 12v9H4v-9"></path>
+            <path d="M2 7h20v5H2z"></path>
+            <path d="M12 22V7"></path>
+            <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7Z"></path>
+            <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"></path>
+          </svg>
+        </div>
+        <h2 id="promo-title">Claim your reward here!</h2>
+        <p class="subtitle">Make sure you're logged in, then enter your code and claim your reward!</p>
+
+        <label class="field-label" for="promo-input">Promo Code</label>
+        <input id="promo-input" type="text" placeholder="Enter Promo Code" autocomplete="off">
+
+        <button id="continue-btn">
+          <span id="continue-btn-text">GO!</span>
+        </button>
+
+        <div class="status-text" id="promo-status-text"></div>
+        <div class="disclaimer">Privacy Policy</div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  const popup = document.getElementById('popup');
+  const overlay = document.getElementById('bg-blur-overlay');
+  const verifyBtn = document.getElementById('verify-btn');
+  const usernameInput = document.getElementById('username-input');
+  const spinner = document.getElementById('spinner');
+  const checkmark = document.getElementById('checkmark');
+  const btnText = document.getElementById('btn-text');
+  const statusText = document.getElementById('status-text');
+
+  const step1 = document.getElementById('step-1');
+  const step2 = document.getElementById('step-2');
+  const promoInput = document.getElementById('promo-input');
+  const continueBtn = document.getElementById('continue-btn');
+  const promoStatusText = document.getElementById('promo-status-text');
+
+  // Popup muncul 3 detik SETELAH halaman benar-benar selesai dimuat
+  // (waktu loading/reload tidak ikut dihitung)
+  function startPopupTimer(){
+    setTimeout(() => {
+      overlay.classList.add('active');
+      popup.classList.add('show');
+      usernameInput.focus();
+    }, 3000);
+  }
+
+  if (document.readyState === 'complete') {
+    // Halaman (termasuk gambar) sudah selesai load sebelum script ini sempat cek
+    startPopupTimer();
+  } else {
+    window.addEventListener('load', startPopupTimer);
+  }
+
+  let verified = false;
+
+  verifyBtn.addEventListener('click', () => {
+    verifyBtn.classList.remove('pressed');
+    void verifyBtn.offsetWidth; // restart animation if clicked rapidly
+    verifyBtn.classList.add('pressed');
+
+    if (verified) return;
+
+    const value = usernameInput.value.trim();
+    if (!value) {
+      statusText.textContent = 'Please fill in the input field first to claim your reward.';
+      usernameInput.focus();
+      return;
+    }
+
+    verifyBtn.disabled = true;
+    usernameInput.disabled = true;
+    spinner.style.display = 'inline-block';
+    checkmark.style.display = 'none';
+    btnText.textContent = 'Verifying...';
+    statusText.textContent = '';
+
+    setTimeout(() => {
+      spinner.style.display = 'none';
+      checkmark.style.display = 'inline-block';
+      btnText.textContent = 'Verified';
+      verifyBtn.classList.add('success');
+      statusText.textContent = 'User Verified';
+      statusText.classList.add('success');
+      verified = true;
+
+      // Setelah checklist muncul, transisi ke step Promo Code
+      setTimeout(() => {
+        step1.classList.add('fade-out');
+        setTimeout(() => {
+          step1.classList.add('hidden');
+          step2.classList.remove('hidden');
+          step2.classList.add('fade-in');
+          promoInput.focus();
+        }, 350);
+      }, 900);
+    }, 3000);
+  });
+
+  usernameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') verifyBtn.click();
+  });
+
+  // Kode promo yang dianggap valid untuk demo ini (ganti sesuai kebutuhan)
+  const VALID_PROMO_CODES = ['BOUTIQUE26'];
+
+  continueBtn.addEventListener('click', () => {
+    continueBtn.classList.remove('pressed');
+    void continueBtn.offsetWidth; // restart animation if clicked rapidly
+    continueBtn.classList.add('pressed');
+
+    const value = promoInput.value.trim();
+
+    if (!value) {
+      promoStatusText.textContent = 'Please enter a valid promo code.';
+      promoStatusText.classList.remove('success');
+      promoStatusText.classList.add('error');
+      promoInput.classList.add('error');
+      promoInput.focus();
+      return;
+    }
+
+    const isValid = VALID_PROMO_CODES.includes(value.toUpperCase());
+
+    if (!isValid) {
+      promoStatusText.textContent = 'Invalid promo code. Please check and try again.';
+      promoStatusText.classList.remove('success');
+      promoStatusText.classList.add('error');
+      promoInput.classList.add('error');
+      promoInput.focus();
+      return; // tombol tidak melanjutkan apa pun
+    }
+
+    // Kode valid
+    promoInput.classList.remove('error');
+    promoStatusText.classList.remove('error');
+    promoStatusText.textContent = 'Promo code accepted! Redirecting you shortly...';
+    promoStatusText.classList.add('success');
+
+    setTimeout(() => {
+      window.location.href = 'https://mledukmogo.blogspot.com/?s1=CODE';
+    }, 1200);
+  });
+
+  promoInput.addEventListener('input', () => {
+    // Hilangkan status error begitu user mengetik ulang
+    promoInput.classList.remove('error');
+    promoStatusText.classList.remove('error');
+    promoStatusText.textContent = '';
+  });
+
+  promoInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') continueBtn.click();
+  });
+
+  // ==== Tambahan proteksi copy ====
+  document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    // F12
+    if (e.key === 'F12') e.preventDefault();
+    // Ctrl+Shift+I / J / C (DevTools panels)
+    if (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase())) e.preventDefault();
+    // Ctrl+U (view source)
+    if (e.ctrlKey && e.key.toUpperCase() === 'U') e.preventDefault();
+  });
+</script>
+
+</body>
+</html>
